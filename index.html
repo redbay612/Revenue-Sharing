@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>極簡分帳小幫手</title>
+    <!-- 引入 Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
+        body { background-color: var(--bg); color: var(--text-main); margin: 0; padding: 20px; line-height: 1.6; }
+
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 30px; }
+        header h1 { color: var(--primary); margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        header p { color: var(--text-muted); margin-top: 5px; }
+
+        /* 卡片樣式 */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary);
+        }
+
+        /* 表單元素 */
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-weight: 500; margin-bottom: 6px; color: var(--text-main); font-size: 0.95rem; }
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+        input:focus, select:focus { border-color: var(--primary); ring: 2px solid var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+
+        /* 成員勾選區 */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .checkbox-item input { width: auto; cursor: pointer; }
+
+        /* 按鈕設計 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            width: 100%;
+            font-size: 1rem;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-edit { background: var(--warning); color: white; padding: 6px 12px; font-size: 0.85rem; width: auto; }
+        .btn-delete { background: var(--danger); color: white; padding: 6px 12px; font-size: 0.85rem; width: auto; }
+
+        /* 表格樣式 */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: #f8fafc; text-align: left; padding: 12px; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border); }
+        td { padding: 14px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .badge {
+            background: #eef2ff;
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-right: 4px;
+            display: inline-block;
+        }
+
+        /* 結算報告區 */
+        .result-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f0fdf4;
+            border-left: 4px solid var(--success);
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+        .result-item span.name { font-weight: 700; color: var(--text-main); }
+        .result-item .arrow { margin: 0 15px; color: var(--text-muted); }
+        .result-item .amount { margin-left: auto; font-weight: 700; color: var(--success); font-size: 1.1rem; }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .card { padding: 16px; }
+            td, th { padding: 8px; font-size: 0.85rem; }
+            .btn-edit, .btn-delete { padding: 4px 8px; margin-bottom: 4px; display: block; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1><span class="material-icons-round">payments</span> 分帳小幫手</h1>
+        <p>輕鬆管理多人旅遊、聚餐開銷</p>
+    </header>
+
+    <!-- 1. 成員設定 -->
+    <div class="card">
+        <div class="card-title"><span class="material-icons-round">group_add</span> 成員設定</div>
+        <div class="form-group">
+            <label>輸入所有參與者姓名 (用逗號或空白隔開)</label>
+            <input type="text" id="membersInput" placeholder="例如: 小明, 小華, 小戴" onchange="updateMemberCheckboxes()">
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;" id="mainGrid">
+        <!-- 2. 新增支出 -->
+        <div class="card">
+            <div class="card-title"><span class="material-icons-round">add_circle</span> 新增支出</div>
+            <input type="hidden" id="editIndex" value="-1">
+            
+            <div class="form-group">
+                <label>支出項目</label>
+                <input type="text" id="description" placeholder="例如: 鼎泰豐晚餐">
+            </div>
+            <div class="form-group">
+                <label>金額 (TWD)</label>
+                <input type="number" id="amount" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label>付款人</label>
+                <select id="payer"></select>
+            </div>
+            <div class="form-group">
+                <label>分攤對象</label>
+                <div id="splitAmong" class="checkbox-grid">
+                    <span style="color:var(--text-muted); font-size: 0.85rem;">請先輸入成員...</span>
+                </div>
+            </div>
+            <button class="btn btn-primary" id="saveBtn" onclick="saveExpense()">
+                <span class="material-icons-round">save</span> 儲存支出
+            </button>
+        </div>
+
+        <!-- 3. 結算結果 -->
+        <div class="card">
+            <div class="card-title"><span class="material-icons-round">receipt_long</span> 結算報告</div>
+            <div id="settlementResults">
+                <p style="text-align: center; color: var(--text-muted); margin-top: 40px;">尚未有支出紀錄</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. 明細列表 -->
+    <div class="card">
+        <div class="card-title"><span class="material-icons-round">list_alt</span> 支出明細</div>
+        <div class="table-container">
+            <table id="expenseTable">
+                <thead>
+                    <tr>
+                        <th>項目</th>
+                        <th>金額</th>
+                        <th>付款者</th>
+                        <th>分攤對象</th>
+                        <th style="width: 120px;">操作</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    let members = [];
+    let expenses = JSON.parse(localStorage.getItem('expenses_v2')) || [];
+
+    function init() {
+        const savedMembers = localStorage.getItem('members_v2');
+        if (savedMembers) {
+            document.getElementById('membersInput').value = savedMembers;
+            updateMemberCheckboxes();
+        }
+        renderExpenses();
+    }
+
+    function updateMemberCheckboxes() {
+        const input = document.getElementById('membersInput').value;
+        // 支援逗號、空格或全型逗號分割
+        members = input.split(/[ ,，]+/).map(m => m.trim()).filter(m => m !== "");
+        localStorage.setItem('members_v2', input);
+
+        const payerSelect = document.getElementById('payer');
+        payerSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join('');
+
+        const splitGroup = document.getElementById('splitAmong');
+        if(members.length === 0) {
+            splitGroup.innerHTML = '<span style="color:var(--text-muted); font-size: 0.85rem;">請先輸入成員...</span>';
+            return;
+        }
+        splitGroup.innerHTML = members.map(m => `
+            <label class="checkbox-item">
+                <input type="checkbox" name="splitter" value="${m}" checked> ${m}
+            </label>
+        `).join('');
+    }
+
+    function saveExpense() {
+        const desc = document.getElementById('description').value;
+        const amt = parseFloat(document.getElementById('amount').value);
+        const payer = document.getElementById('payer').value;
+        const editIndex = parseInt(document.getElementById('editIndex').value);
+        const splitters = Array.from(document.querySelectorAll('input[name="splitter"]:checked')).map(cb => cb.value);
+
+        if (!desc || isNaN(amt) || amt <= 0 || splitters.length === 0) {
+            alert("請填寫正確金額並選擇至少一位分攤者");
+            return;
+        }
+
+        const expenseData = { desc, amt, payer, splitters };
+
+        if (editIndex === -1) {
+            expenses.push(expenseData);
+        } else {
+            expenses[editIndex] = expenseData;
+            document.getElementById('editIndex').value = "-1";
+            document.getElementById('saveBtn').innerHTML = '<span class="material-icons-round">save</span> 儲存支出';
+        }
+
+        localStorage.setItem('expenses_v2', JSON.stringify(expenses));
+        clearForm();
+        renderExpenses();
+    }
+
+    function clearForm() {
+        document.getElementById('description').value = "";
+        document.getElementById('amount').value = "";
+    }
+
+    function renderExpenses() {
+        const tbody = document.querySelector('#expenseTable tbody');
+        tbody.innerHTML = "";
+
+        expenses.forEach((ex, index) => {
+            const row = `<tr>
+                <td style="font-weight:500">${ex.desc}</td>
+                <td style="color:var(--success); font-weight:700">$${ex.amt.toLocaleString()}</td>
+                <td><span class="badge" style="background:#ddd; color:#333">${ex.payer}</span></td>
+                <td>${ex.splitters.map(s => `<span class="badge">${s}</span>`).join('')}</td>
+                <td>
+                    <button class="btn btn-edit" onclick="editExpense(${index})"><span class="material-icons-round" style="font-size:16px">edit</span></button>
+                    <button class="btn btn-delete" onclick="deleteExpense(${index})"><span class="material-icons-round" style="font-size:16px">delete</span></button>
+                </td>
+            </tr>`;
+            tbody.innerHTML += row;
+        });
+
+        calculateSettlement();
+    }
+
+    function deleteExpense(index) {
+        if (confirm("確定刪除這筆紀錄嗎？")) {
+            expenses.splice(index, 1);
+            localStorage.setItem('expenses_v2', JSON.stringify(expenses));
+            renderExpenses();
+        }
+    }
+
+    function editExpense(index) {
+        const ex = expenses[index];
+        document.getElementById('description').value = ex.desc;
+        document.getElementById('amount').value = ex.amt;
+        document.getElementById('payer').value = ex.payer;
+        document.getElementById('editIndex').value = index;
+        document.getElementById('saveBtn').innerHTML = '<span class="material-icons-round">update</span> 更新紀錄';
+
+        const checkboxes = document.querySelectorAll('input[name="splitter"]');
+        checkboxes.forEach(cb => {
+            cb.checked = ex.splitters.includes(cb.value);
+        });
+        window.scrollTo({ top: document.getElementById('mainGrid').offsetTop - 20, behavior: 'smooth' });
+    }
+
+    function calculateSettlement() {
+        const balances = {};
+        members.forEach(m => balances[m] = 0);
+
+        expenses.forEach(ex => {
+            const share = ex.amt / ex.splitters.length;
+            balances[ex.payer] += ex.amt;
+            ex.splitters.forEach(s => {
+                balances[s] -= share;
+            });
+        });
+
+        const resultsDiv = document.getElementById('settlementResults');
+        resultsDiv.innerHTML = "";
+
+        let debtors = [];
+        let creditors = [];
+
+        for (let person in balances) {
+            if (balances[person] < -0.1) {
+                debtors.push({ name: person, amount: Math.abs(balances[person]) });
+            } else if (balances[person] > 0.1) {
+                creditors.push({ name: person, amount: balances[person] });
+            }
+        }
+
+        let i = 0, j = 0;
+        while (i < debtors.length && j < creditors.length) {
+            let payAmount = Math.min(debtors[i].amount, creditors[j].amount);
+            
+            const div = document.createElement('div');
+            div.className = 'result-item';
+            div.innerHTML = `
+                <span class="name">${debtors[i].name}</span>
+                <span class="material-icons-round arrow">trending_flat</span>
+                <span class="name">${creditors[j].name}</span>
+                <span class="amount">$${payAmount.toFixed(0)}</span>
+            `;
+            resultsDiv.appendChild(div);
+
+            debtors[i].amount -= payAmount;
+            creditors[j].amount -= payAmount;
+
+            if (debtors[i].amount <= 0.1) i++;
+            if (creditors[j].amount <= 0.1) j++;
+        }
+
+        if (resultsDiv.innerHTML === "") {
+            resultsDiv.innerHTML = '<p style="text-align: center; color: var(--text-muted); margin-top: 40px;">帳目已平清 ✨</p>';
+        }
+    }
+
+    window.onload = init;
+</script>
+
+</body>
+</html>
