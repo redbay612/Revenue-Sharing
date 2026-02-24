@@ -3,379 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>極簡分帳小幫手</title>
-    <!-- 引入 Google Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <title>簡易分帳同步小幫手</title>
     <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-        }
-
-        * { box-sizing: border-box; font-family: 'Noto Sans TC', sans-serif; }
-        body { background-color: var(--bg); color: var(--text-main); margin: 0; padding: 20px; line-height: 1.6; }
-
-        .container { max-width: 900px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 30px; }
-        header h1 { color: var(--primary); margin: 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        header p { color: var(--text-muted); margin-top: 5px; }
-
-        /* 卡片樣式 */
-        .card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            margin-bottom: 24px;
-            border: 1px solid var(--border);
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--primary);
-        }
-
-        /* 表單元素 */
-        .form-group { margin-bottom: 16px; }
-        label { display: block; font-weight: 500; margin-bottom: 6px; color: var(--text-main); font-size: 0.95rem; }
-        input, select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: all 0.2s;
-            outline: none;
-        }
-        input:focus, select:focus { border-color: var(--primary); ring: 2px solid var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
-
-        /* 成員勾選區 */
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            gap: 10px;
-            background: #f1f5f9;
-            padding: 12px;
-            border-radius: 8px;
-        }
-        .checkbox-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        .checkbox-item input { width: auto; cursor: pointer; }
-
-        /* 按鈕設計 */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            width: 100%;
-            font-size: 1rem;
-        }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
-        .btn-edit { background: var(--warning); color: white; padding: 6px 12px; font-size: 0.85rem; width: auto; }
-        .btn-delete { background: var(--danger); color: white; padding: 6px 12px; font-size: 0.85rem; width: auto; }
-
-        /* 表格樣式 */
-        .table-container { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #f8fafc; text-align: left; padding: 12px; font-weight: 600; color: var(--text-muted); border-bottom: 2px solid var(--border); }
-        td { padding: 14px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        .badge {
-            background: #eef2ff;
-            color: var(--primary);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            margin-right: 4px;
-            display: inline-block;
-        }
-
-        /* 結算報告區 */
-        .result-item {
-            display: flex;
-            align-items: center;
-            padding: 12px;
-            background: #f0fdf4;
-            border-left: 4px solid var(--success);
-            margin-bottom: 10px;
-            border-radius: 4px;
-        }
-        .result-item span.name { font-weight: 700; color: var(--text-main); }
-        .result-item .arrow { margin: 0 15px; color: var(--text-muted); }
-        .result-item .amount { margin-left: auto; font-weight: 700; color: var(--success); font-size: 1.1rem; }
-
-        @media (max-width: 600px) {
-            body { padding: 10px; }
-            .card { padding: 16px; }
-            td, th { padding: 8px; font-size: 0.85rem; }
-            .btn-edit, .btn-delete { padding: 4px 8px; margin-bottom: 4px; display: block; }
-        }
+        :root { --p: #007bff; --s: #28a745; --d: #dc3545; --bg: #f8f9fa; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
+        .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        h2 { margin: 0 0 15px 0; font-size: 1.2rem; color: var(--p); border-left: 4px solid var(--p); padding-left: 10px; }
+        input, select { width: 100%; padding: 10px; margin: 5px 0 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        .btn { border: none; padding: 10px 15px; border-radius: 5px; color: white; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 5px; }
+        .btn-p { background: var(--p); }
+        .btn-s { background: var(--s); }
+        .btn-d { background: var(--d); }
+        .btn-o { background: white; color: var(--p); border: 1px solid var(--p); }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td { border-bottom: 1px solid #eee; padding: 10px; text-align: left; }
+        .flex { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+        .group-item { padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
+        .group-item:hover { border-color: var(--p); background: #f0f7ff; }
+        .badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
+        .settle-box { background: #e9f7ef; padding: 10px; border-radius: 5px; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1><span class="material-icons-round">payments</span> 分帳小幫手</h1>
-        <p>輕鬆管理多人旅遊、聚餐開銷</p>
-    </header>
-
-    <!-- 1. 成員設定 -->
+<!-- 頁面 1: 專案清單 -->
+<div id="listPage">
     <div class="card">
-        <div class="card-title"><span class="material-icons-round">group_add</span> 成員設定</div>
-        <div class="form-group">
-            <label>輸入所有參與者姓名 (用逗號或空白隔開)</label>
-            <input type="text" id="membersInput" placeholder="例如: 小明, 小華, 小戴" onchange="updateMemberCheckboxes()">
+        <h2>我的分帳專案</h2>
+        <input type="text" id="newGroupName" placeholder="新專案名稱 (如: 沖繩旅遊)">
+        <button class="btn btn-p" onclick="addGroup()">建立新專案</button>
+        <hr>
+        <button class="btn btn-o" onclick="importFromCode()">匯入朋友傳來的同步碼</button>
+    </div>
+    <div id="groupList"></div>
+</div>
+
+<!-- 頁面 2: 專案詳情 -->
+<div id="detailPage" style="display:none;">
+    <button class="btn btn-o" onclick="showList()" style="width:auto;">← 返回列表</button>
+    
+    <div class="card">
+        <h2 id="currentTitle">專案名稱</h2>
+        <div class="flex">
+            <button class="btn btn-s" onclick="exportToCode()">產生同步碼傳給朋友</button>
         </div>
+        <p style="font-size: 0.8rem; color: #666;">* 同步碼包含此專案的所有成員與帳目</p>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;" id="mainGrid">
-        <!-- 2. 新增支出 -->
-        <div class="card">
-            <div class="card-title"><span class="material-icons-round">add_circle</span> 新增支出</div>
-            <input type="hidden" id="editIndex" value="-1">
-            
-            <div class="form-group">
-                <label>支出項目</label>
-                <input type="text" id="description" placeholder="例如: 鼎泰豐晚餐">
-            </div>
-            <div class="form-group">
-                <label>金額 (TWD)</label>
-                <input type="number" id="amount" placeholder="0">
-            </div>
-            <div class="form-group">
-                <label>付款人</label>
-                <select id="payer"></select>
-            </div>
-            <div class="form-group">
-                <label>分攤對象</label>
-                <div id="splitAmong" class="checkbox-grid">
-                    <span style="color:var(--text-muted); font-size: 0.85rem;">請先輸入成員...</span>
-                </div>
-            </div>
-            <button class="btn btn-primary" id="saveBtn" onclick="saveExpense()">
-                <span class="material-icons-round">save</span> 儲存支出
-            </button>
-        </div>
-
-        <!-- 3. 結算結果 -->
-        <div class="card">
-            <div class="card-title"><span class="material-icons-round">receipt_long</span> 結算報告</div>
-            <div id="settlementResults">
-                <p style="text-align: center; color: var(--text-muted); margin-top: 40px;">尚未有支出紀錄</p>
-            </div>
-        </div>
+    <div class="card">
+        <h2>成員設定</h2>
+        <input type="text" id="memberInput" placeholder="成員姓名 (用逗號隔開, 如: 小明, 小華)" onchange="saveMembers()">
     </div>
 
-    <!-- 4. 明細列表 -->
     <div class="card">
-        <div class="card-title"><span class="material-icons-round">list_alt</span> 支出明細</div>
-        <div class="table-container">
-            <table id="expenseTable">
-                <thead>
-                    <tr>
-                        <th>項目</th>
-                        <th>金額</th>
-                        <th>付款者</th>
-                        <th>分攤對象</th>
-                        <th style="width: 120px;">操作</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
+        <h2>新增支出</h2>
+        <input type="hidden" id="editIdx" value="-1">
+        <input type="text" id="expDesc" placeholder="項目內容">
+        <input type="number" id="expAmt" placeholder="金額">
+        <label>誰付的:</label>
+        <select id="expPayer"></select>
+        <label>誰要分 (預設全選):</label>
+        <div id="splitCheckboxes" style="display:flex; flex-wrap:wrap; gap:10px; padding: 10px 0;"></div>
+        <button class="btn btn-p" onclick="saveExp()">儲存並更新</button>
+    </div>
+
+    <div class="card">
+        <h2>結算報告</h2>
+        <div id="settleResults" class="settle-box"></div>
+    </div>
+
+    <div class="card">
+        <h2>支出明細</h2>
+        <table id="expTable">
+            <thead><tr><th>項目</th><th>金額</th><th>付款人</th><th>操作</th></tr></thead>
+            <tbody></tbody>
+        </table>
     </div>
 </div>
 
 <script>
-    let members = [];
-    let expenses = JSON.parse(localStorage.getItem('expenses_v2')) || [];
+let groups = JSON.parse(localStorage.getItem('split_simple_data')) || [];
+let curId = null;
 
-    function init() {
-        const savedMembers = localStorage.getItem('members_v2');
-        if (savedMembers) {
-            document.getElementById('membersInput').value = savedMembers;
-            updateMemberCheckboxes();
-        }
-        renderExpenses();
+// --- 列表操作 ---
+function addGroup() {
+    const name = document.getElementById('newGroupName').value;
+    if (!name) return;
+    const newGroup = { id: Date.now(), name, members: [], exps: [] };
+    groups.push(newGroup);
+    save();
+    renderList();
+    document.getElementById('newGroupName').value = "";
+}
+
+function renderList() {
+    const list = document.getElementById('groupList');
+    list.innerHTML = "";
+    groups.forEach(g => {
+        list.innerHTML += `
+            <div class="card group-item" onclick="showDetail(${g.id})">
+                <div class="flex">
+                    <strong>${g.name}</strong>
+                    <button class="btn btn-d" style="width:auto; padding:5px" onclick="deleteGroup(${g.id}, event)">刪除</button>
+                </div>
+                <div style="font-size:0.8rem; color:#666; margin-top:5px;">
+                    成員: ${g.members.join(', ') || '尚未設定'} | 紀錄: ${g.exps.length} 筆
+                </div>
+            </div>`;
+    });
+}
+
+function deleteGroup(id, e) {
+    e.stopPropagation();
+    if(confirm("確定刪除此專案？")) {
+        groups = groups.filter(g => g.id !== id);
+        save(); renderList();
     }
+}
 
-    function updateMemberCheckboxes() {
-        const input = document.getElementById('membersInput').value;
-        // 支援逗號、空格或全型逗號分割
-        members = input.split(/[ ,，]+/).map(m => m.trim()).filter(m => m !== "");
-        localStorage.setItem('members_v2', input);
+// --- 詳情操作 ---
+function showDetail(id) {
+    curId = id;
+    const g = groups.find(x => x.id === id);
+    document.getElementById('listPage').style.display = "none";
+    document.getElementById('detailPage').style.display = "block";
+    document.getElementById('currentTitle').innerText = g.name;
+    document.getElementById('memberInput').value = g.members.join(', ');
+    refreshMemberUI();
+    renderExps();
+}
 
-        const payerSelect = document.getElementById('payer');
-        payerSelect.innerHTML = members.map(m => `<option value="${m}">${m}</option>`).join('');
+function showList() {
+    document.getElementById('listPage').style.display = "block";
+    document.getElementById('detailPage').style.display = "none";
+    renderList();
+}
 
-        const splitGroup = document.getElementById('splitAmong');
-        if(members.length === 0) {
-            splitGroup.innerHTML = '<span style="color:var(--text-muted); font-size: 0.85rem;">請先輸入成員...</span>';
-            return;
-        }
-        splitGroup.innerHTML = members.map(m => `
-            <label class="checkbox-item">
-                <input type="checkbox" name="splitter" value="${m}" checked> ${m}
-            </label>
-        `).join('');
+function saveMembers() {
+    const g = groups.find(x => x.id === curId);
+    g.members = document.getElementById('memberInput').value.split(/[ ,，]+/).map(m => m.trim()).filter(m => m);
+    save(); refreshMemberUI();
+}
+
+function refreshMemberUI() {
+    const g = groups.find(x => x.id === curId);
+    document.getElementById('expPayer').innerHTML = g.members.map(m => `<option value="${m}">${m}</option>`).join('');
+    document.getElementById('splitCheckboxes').innerHTML = g.members.map(m => `
+        <label><input type="checkbox" name="sc" value="${m}" checked> ${m}</label>
+    `).join('');
+}
+
+function saveExp() {
+    const g = groups.find(x => x.id === curId);
+    const desc = document.getElementById('expDesc').value;
+    const amt = parseFloat(document.getElementById('expAmt').value);
+    const payer = document.getElementById('expPayer').value;
+    const splitters = Array.from(document.querySelectorAll('input[name="sc"]:checked')).map(i => i.value);
+    const editIdx = parseInt(document.getElementById('editIdx').value);
+
+    if(!desc || !amt || splitters.length === 0) return alert("請完整填寫");
+
+    const data = { desc, amt, payer, splitters };
+    if(editIdx === -1) g.exps.push(data);
+    else g.exps[editIdx] = data;
+
+    document.getElementById('editIdx').value = "-1";
+    document.getElementById('expDesc').value = "";
+    document.getElementById('expAmt').value = "";
+    save(); renderExps();
+}
+
+function renderExps() {
+    const g = groups.find(x => x.id === curId);
+    const tbody = document.querySelector('#expTable tbody');
+    tbody.innerHTML = "";
+    g.exps.forEach((ex, i) => {
+        tbody.innerHTML += `<tr>
+            <td>${ex.desc}</td>
+            <td>$${ex.amt}</td>
+            <td>${ex.payer}</td>
+            <td>
+                <button onclick="editExp(${i})">改</button>
+                <button onclick="deleteExp(${i})" style="color:red">刪</button>
+            </td>
+        </tr>`;
+    });
+    calculate();
+}
+
+function editExp(i) {
+    const g = groups.find(x => x.id === curId);
+    const ex = g.exps[i];
+    document.getElementById('expDesc').value = ex.desc;
+    document.getElementById('expAmt').value = ex.amt;
+    document.getElementById('expPayer').value = ex.payer;
+    document.getElementById('editIdx').value = i;
+    const cbs = document.querySelectorAll('input[name="sc"]');
+    cbs.forEach(cb => cb.checked = ex.splitters.includes(cb.value));
+}
+
+function deleteExp(i) {
+    const g = groups.find(x => x.id === curId);
+    g.exps.splice(i, 1); save(); renderExps();
+}
+
+function calculate() {
+    const g = groups.find(x => x.id === curId);
+    const bal = {};
+    g.members.forEach(m => bal[m] = 0);
+    g.exps.forEach(ex => {
+        const s = ex.amt / ex.splitters.length;
+        if(bal[ex.payer] !== undefined) bal[ex.payer] += ex.amt;
+        ex.splitters.forEach(p => { if(bal[p] !== undefined) bal[p] -= s; });
+    });
+    
+    let res = "";
+    let ds = [], cs = [];
+    for(let p in bal) {
+        if(bal[p] < -0.1) ds.push({n:p, a:Math.abs(bal[p])});
+        else if(bal[p] > 0.1) cs.push({n:p, a:bal[p]});
     }
+    let i=0, j=0;
+    while(i<ds.length && j<cs.length) {
+        let p = Math.min(ds[i].a, cs[j].a);
+        res += `<div><b>${ds[i].n}</b> ➔ <b>${cs[j].n}</b> : $${Math.round(p)}</div>`;
+        ds[i].a -= p; cs[j].a -= p;
+        if(ds[i].a <= 0.1) i++; if(cs[j].a <= 0.1) j++;
+    }
+    document.getElementById('settleResults').innerHTML = res || "帳目已平";
+}
 
-    function saveExpense() {
-        const desc = document.getElementById('description').value;
-        const amt = parseFloat(document.getElementById('amount').value);
-        const payer = document.getElementById('payer').value;
-        const editIndex = parseInt(document.getElementById('editIndex').value);
-        const splitters = Array.from(document.querySelectorAll('input[name="splitter"]:checked')).map(cb => cb.value);
+// --- 同步核心功能 ---
 
-        if (!desc || isNaN(amt) || amt <= 0 || splitters.length === 0) {
-            alert("請填寫正確金額並選擇至少一位分攤者");
-            return;
-        }
+// 匯出：將目前專案轉為 Base64 文字碼
+function exportToCode() {
+    const g = groups.find(x => x.id === curId);
+    const code = btoa(unescape(encodeURIComponent(JSON.stringify(g))));
+    
+    // 建立一個臨時輸入框來複製文字
+    const tempInput = document.createElement("textarea");
+    tempInput.value = code;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    document.execCommand("copy");
+    document.body.removeChild(tempInput);
+    
+    alert("同步碼已複製到剪貼簿！請直接貼給 Line 朋友。\n\n朋友收到後，點擊「匯入同步碼」並貼上即可。");
+}
 
-        const expenseData = { desc, amt, payer, splitters };
-
-        if (editIndex === -1) {
-            expenses.push(expenseData);
+// 匯入：將文字碼轉回專案
+function importFromCode() {
+    const code = prompt("請貼上朋友傳給你的同步碼：");
+    if (!code) return;
+    try {
+        const importedGroup = JSON.parse(decodeURIComponent(escape(atob(code))));
+        // 檢查是否已存在，存在就更新，不存在就新增
+        const idx = groups.findIndex(g => g.id === importedGroup.id);
+        if (idx !== -1) {
+            if(confirm("偵測到相同的專案，要覆蓋舊資料嗎？")) {
+                groups[idx] = importedGroup;
+            } else { return; }
         } else {
-            expenses[editIndex] = expenseData;
-            document.getElementById('editIndex').value = "-1";
-            document.getElementById('saveBtn').innerHTML = '<span class="material-icons-round">save</span> 儲存支出';
+            groups.push(importedGroup);
         }
-
-        localStorage.setItem('expenses_v2', JSON.stringify(expenses));
-        clearForm();
-        renderExpenses();
+        save();
+        renderList();
+        alert("匯入成功！");
+    } catch (e) {
+        alert("代碼無效，請確認是否複製完整。");
     }
+}
 
-    function clearForm() {
-        document.getElementById('description').value = "";
-        document.getElementById('amount').value = "";
-    }
+function save() { localStorage.setItem('split_simple_data', JSON.stringify(groups)); }
 
-    function renderExpenses() {
-        const tbody = document.querySelector('#expenseTable tbody');
-        tbody.innerHTML = "";
-
-        expenses.forEach((ex, index) => {
-            const row = `<tr>
-                <td style="font-weight:500">${ex.desc}</td>
-                <td style="color:var(--success); font-weight:700">$${ex.amt.toLocaleString()}</td>
-                <td><span class="badge" style="background:#ddd; color:#333">${ex.payer}</span></td>
-                <td>${ex.splitters.map(s => `<span class="badge">${s}</span>`).join('')}</td>
-                <td>
-                    <button class="btn btn-edit" onclick="editExpense(${index})"><span class="material-icons-round" style="font-size:16px">edit</span></button>
-                    <button class="btn btn-delete" onclick="deleteExpense(${index})"><span class="material-icons-round" style="font-size:16px">delete</span></button>
-                </td>
-            </tr>`;
-            tbody.innerHTML += row;
-        });
-
-        calculateSettlement();
-    }
-
-    function deleteExpense(index) {
-        if (confirm("確定刪除這筆紀錄嗎？")) {
-            expenses.splice(index, 1);
-            localStorage.setItem('expenses_v2', JSON.stringify(expenses));
-            renderExpenses();
-        }
-    }
-
-    function editExpense(index) {
-        const ex = expenses[index];
-        document.getElementById('description').value = ex.desc;
-        document.getElementById('amount').value = ex.amt;
-        document.getElementById('payer').value = ex.payer;
-        document.getElementById('editIndex').value = index;
-        document.getElementById('saveBtn').innerHTML = '<span class="material-icons-round">update</span> 更新紀錄';
-
-        const checkboxes = document.querySelectorAll('input[name="splitter"]');
-        checkboxes.forEach(cb => {
-            cb.checked = ex.splitters.includes(cb.value);
-        });
-        window.scrollTo({ top: document.getElementById('mainGrid').offsetTop - 20, behavior: 'smooth' });
-    }
-
-    function calculateSettlement() {
-        const balances = {};
-        members.forEach(m => balances[m] = 0);
-
-        expenses.forEach(ex => {
-            const share = ex.amt / ex.splitters.length;
-            balances[ex.payer] += ex.amt;
-            ex.splitters.forEach(s => {
-                balances[s] -= share;
-            });
-        });
-
-        const resultsDiv = document.getElementById('settlementResults');
-        resultsDiv.innerHTML = "";
-
-        let debtors = [];
-        let creditors = [];
-
-        for (let person in balances) {
-            if (balances[person] < -0.1) {
-                debtors.push({ name: person, amount: Math.abs(balances[person]) });
-            } else if (balances[person] > 0.1) {
-                creditors.push({ name: person, amount: balances[person] });
-            }
-        }
-
-        let i = 0, j = 0;
-        while (i < debtors.length && j < creditors.length) {
-            let payAmount = Math.min(debtors[i].amount, creditors[j].amount);
-            
-            const div = document.createElement('div');
-            div.className = 'result-item';
-            div.innerHTML = `
-                <span class="name">${debtors[i].name}</span>
-                <span class="material-icons-round arrow">trending_flat</span>
-                <span class="name">${creditors[j].name}</span>
-                <span class="amount">$${payAmount.toFixed(0)}</span>
-            `;
-            resultsDiv.appendChild(div);
-
-            debtors[i].amount -= payAmount;
-            creditors[j].amount -= payAmount;
-
-            if (debtors[i].amount <= 0.1) i++;
-            if (creditors[j].amount <= 0.1) j++;
-        }
-
-        if (resultsDiv.innerHTML === "") {
-            resultsDiv.innerHTML = '<p style="text-align: center; color: var(--text-muted); margin-top: 40px;">帳目已平清 ✨</p>';
-        }
-    }
-
-    window.onload = init;
+window.onload = renderList;
 </script>
 
 </body>
