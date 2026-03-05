@@ -3,26 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>簡易分帳同步小幫手</title>
+    <title>分帳小幫手 - 精準同步版</title>
     <style>
-        :root { --p: #007bff; --s: #28a745; --d: #dc3545; --bg: #f8f9fa; }
-        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
-        .card { background: white; border-radius: 10px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 15px; }
-        h2 { margin: 0 0 15px 0; font-size: 1.2rem; color: var(--p); border-left: 4px solid var(--p); padding-left: 10px; }
-        input, select { width: 100%; padding: 10px; margin: 5px 0 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        .btn { border: none; padding: 10px 15px; border-radius: 5px; color: white; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 5px; }
+        :root { --p: #4f46e5; --s: #10b981; --d: #ef4444; --bg: #f3f4f6; }
+        body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #1f2937; line-height: 1.5; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { margin: 0 0 15px 0; font-size: 1.1rem; color: var(--p); display: flex; align-items: center; gap: 8px; }
+        input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+        .btn { border: none; padding: 12px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 8px; transition: 0.2s; font-size: 1rem; }
         .btn-p { background: var(--p); }
         .btn-s { background: var(--s); }
         .btn-d { background: var(--d); }
         .btn-o { background: white; color: var(--p); border: 1px solid var(--p); }
+        .btn:active { transform: scale(0.98); }
         
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th, td { border-bottom: 1px solid #eee; padding: 10px; text-align: left; }
+        /* 成員標籤樣式 */
+        .member-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        .member-tag { background: #eef2ff; border: 1px solid #c7d2fe; color: #4338ca; padding: 6px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .edit-icon { cursor: pointer; font-size: 0.8rem; background: #c7d2fe; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9rem; }
+        th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #f3f4f6; }
         .flex { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
-        .group-item { padding: 12px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; }
-        .group-item:hover { border-color: var(--p); background: #f0f7ff; }
-        .badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
-        .settle-box { background: #e9f7ef; padding: 10px; border-radius: 5px; margin-top: 10px; }
+        .group-item { padding: 15px; border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 12px; cursor: pointer; }
+        .group-item:hover { border-color: var(--p); background: #f9fafb; }
+        .settle-box { background: #ecfdf5; padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 4px solid var(--s); }
+        .checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; padding: 10px 0; }
     </style>
 </head>
 <body>
@@ -30,70 +36,73 @@
 <!-- 頁面 1: 專案清單 -->
 <div id="listPage">
     <div class="card">
-        <h2>我的分帳專案</h2>
-        <input type="text" id="newGroupName" placeholder="新專案名稱 (如: 沖繩旅遊)">
+        <h2>📂 我的分帳專案</h2>
+        <input type="text" id="newGroupName" placeholder="例如：2024 日本旅遊">
         <button class="btn btn-p" onclick="addGroup()">建立新專案</button>
-        <hr>
-        <button class="btn btn-o" onclick="importFromCode()">匯入朋友傳來的同步碼</button>
+        <button class="btn btn-o" onclick="importFromCode()">📥 匯入朋友傳來的同步碼</button>
     </div>
     <div id="groupList"></div>
 </div>
 
 <!-- 頁面 2: 專案詳情 -->
 <div id="detailPage" style="display:none;">
-    <button class="btn btn-o" onclick="showList()" style="width:auto;">← 返回列表</button>
+    <button class="btn btn-o" onclick="showList()" style="width:auto; margin-bottom:15px;">← 返回列表</button>
     
     <div class="card">
         <h2 id="currentTitle">專案名稱</h2>
+        <button class="btn btn-s" onclick="exportToCode()">🔗 產生同步碼 (傳給朋友同步)</button>
+    </div>
+
+    <!-- 成員管理區 -->
+    <div class="card">
+        <h2>👥 成員管理</h2>
+        <div class="member-list" id="memberTags"></div>
         <div class="flex">
-            <button class="btn btn-s" onclick="exportToCode()">產生同步碼傳給朋友</button>
+            <input type="text" id="newMemberName" placeholder="輸入新成員姓名" style="margin:0;">
+            <button class="btn btn-p" onclick="addMember()" style="width:auto; margin:0;">新增</button>
         </div>
-        <p style="font-size: 0.8rem; color: #666;">* 同步碼包含此專案的所有成員與帳目</p>
+        <p style="font-size:0.75rem; color:#6b7280; margin-top:8px;">* 點擊成員名字可「修改姓名」，帳目會自動連動更新。</p>
     </div>
 
     <div class="card">
-        <h2>成員設定</h2>
-        <input type="text" id="memberInput" placeholder="成員姓名 (用逗號隔開, 如: 小明, 小華)" onchange="saveMembers()">
-    </div>
-
-    <div class="card">
-        <h2>新增支出</h2>
+        <h2>💰 新增支出</h2>
         <input type="hidden" id="editIdx" value="-1">
-        <input type="text" id="expDesc" placeholder="項目內容">
+        <input type="text" id="expDesc" placeholder="項目內容 (如：午餐)">
         <input type="number" id="expAmt" placeholder="金額">
-        <label>誰付的:</label>
+        <label style="font-size:0.85rem; color:#666;">付款人：</label>
         <select id="expPayer"></select>
-        <label>誰要分 (預設全選):</label>
-        <div id="splitCheckboxes" style="display:flex; flex-wrap:wrap; gap:10px; padding: 10px 0;"></div>
-        <button class="btn btn-p" onclick="saveExp()">儲存並更新</button>
+        <label style="font-size:0.85rem; color:#666;">分攤對象：</label>
+        <div id="splitCheckboxes" class="checkbox-group"></div>
+        <button class="btn btn-p" id="saveExpBtn" onclick="saveExp()">儲存支出</button>
     </div>
 
     <div class="card">
-        <h2>結算報告</h2>
+        <h2>📊 結算報告</h2>
         <div id="settleResults" class="settle-box"></div>
     </div>
 
     <div class="card">
-        <h2>支出明細</h2>
-        <table id="expTable">
-            <thead><tr><th>項目</th><th>金額</th><th>付款人</th><th>操作</th></tr></thead>
-            <tbody></tbody>
-        </table>
+        <h2>📝 支出明細</h2>
+        <div style="overflow-x:auto;">
+            <table id="expTable">
+                <thead><tr><th>項目</th><th>金額</th><th>付款人</th><th>操作</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
 <script>
-let groups = JSON.parse(localStorage.getItem('split_simple_data')) || [];
+let groups = JSON.parse(localStorage.getItem('split_v2_data')) || [];
 let curId = null;
 
-// --- 列表操作 ---
+// --- 專案管理 ---
 function addGroup() {
     const name = document.getElementById('newGroupName').value;
     if (!name) return;
     const newGroup = { id: Date.now(), name, members: [], exps: [] };
     groups.push(newGroup);
-    save();
-    renderList();
+    save(); renderList();
     document.getElementById('newGroupName').value = "";
 }
 
@@ -105,180 +114,9 @@ function renderList() {
             <div class="card group-item" onclick="showDetail(${g.id})">
                 <div class="flex">
                     <strong>${g.name}</strong>
-                    <button class="btn btn-d" style="width:auto; padding:5px" onclick="deleteGroup(${g.id}, event)">刪除</button>
+                    <button class="btn btn-d" style="width:auto; padding:4px 8px; font-size:0.8rem;" onclick="deleteGroup(${g.id}, event)">刪除</button>
                 </div>
-                <div style="font-size:0.8rem; color:#666; margin-top:5px;">
-                    成員: ${g.members.join(', ') || '尚未設定'} | 紀錄: ${g.exps.length} 筆
+                <div style="font-size:0.85rem; color:#6b7280; margin-top:8px;">
+                    👥 ${g.members.length} 位成員 | 📝 ${g.exps.length} 筆紀錄
                 </div>
-            </div>`;
-    });
-}
-
-function deleteGroup(id, e) {
-    e.stopPropagation();
-    if(confirm("確定刪除此專案？")) {
-        groups = groups.filter(g => g.id !== id);
-        save(); renderList();
-    }
-}
-
-// --- 詳情操作 ---
-function showDetail(id) {
-    curId = id;
-    const g = groups.find(x => x.id === id);
-    document.getElementById('listPage').style.display = "none";
-    document.getElementById('detailPage').style.display = "block";
-    document.getElementById('currentTitle').innerText = g.name;
-    document.getElementById('memberInput').value = g.members.join(', ');
-    refreshMemberUI();
-    renderExps();
-}
-
-function showList() {
-    document.getElementById('listPage').style.display = "block";
-    document.getElementById('detailPage').style.display = "none";
-    renderList();
-}
-
-function saveMembers() {
-    const g = groups.find(x => x.id === curId);
-    g.members = document.getElementById('memberInput').value.split(/[ ,，]+/).map(m => m.trim()).filter(m => m);
-    save(); refreshMemberUI();
-}
-
-function refreshMemberUI() {
-    const g = groups.find(x => x.id === curId);
-    document.getElementById('expPayer').innerHTML = g.members.map(m => `<option value="${m}">${m}</option>`).join('');
-    document.getElementById('splitCheckboxes').innerHTML = g.members.map(m => `
-        <label><input type="checkbox" name="sc" value="${m}" checked> ${m}</label>
-    `).join('');
-}
-
-function saveExp() {
-    const g = groups.find(x => x.id === curId);
-    const desc = document.getElementById('expDesc').value;
-    const amt = parseFloat(document.getElementById('expAmt').value);
-    const payer = document.getElementById('expPayer').value;
-    const splitters = Array.from(document.querySelectorAll('input[name="sc"]:checked')).map(i => i.value);
-    const editIdx = parseInt(document.getElementById('editIdx').value);
-
-    if(!desc || !amt || splitters.length === 0) return alert("請完整填寫");
-
-    const data = { desc, amt, payer, splitters };
-    if(editIdx === -1) g.exps.push(data);
-    else g.exps[editIdx] = data;
-
-    document.getElementById('editIdx').value = "-1";
-    document.getElementById('expDesc').value = "";
-    document.getElementById('expAmt').value = "";
-    save(); renderExps();
-}
-
-function renderExps() {
-    const g = groups.find(x => x.id === curId);
-    const tbody = document.querySelector('#expTable tbody');
-    tbody.innerHTML = "";
-    g.exps.forEach((ex, i) => {
-        tbody.innerHTML += `<tr>
-            <td>${ex.desc}</td>
-            <td>$${ex.amt}</td>
-            <td>${ex.payer}</td>
-            <td>
-                <button onclick="editExp(${i})">改</button>
-                <button onclick="deleteExp(${i})" style="color:red">刪</button>
-            </td>
-        </tr>`;
-    });
-    calculate();
-}
-
-function editExp(i) {
-    const g = groups.find(x => x.id === curId);
-    const ex = g.exps[i];
-    document.getElementById('expDesc').value = ex.desc;
-    document.getElementById('expAmt').value = ex.amt;
-    document.getElementById('expPayer').value = ex.payer;
-    document.getElementById('editIdx').value = i;
-    const cbs = document.querySelectorAll('input[name="sc"]');
-    cbs.forEach(cb => cb.checked = ex.splitters.includes(cb.value));
-}
-
-function deleteExp(i) {
-    const g = groups.find(x => x.id === curId);
-    g.exps.splice(i, 1); save(); renderExps();
-}
-
-function calculate() {
-    const g = groups.find(x => x.id === curId);
-    const bal = {};
-    g.members.forEach(m => bal[m] = 0);
-    g.exps.forEach(ex => {
-        const s = ex.amt / ex.splitters.length;
-        if(bal[ex.payer] !== undefined) bal[ex.payer] += ex.amt;
-        ex.splitters.forEach(p => { if(bal[p] !== undefined) bal[p] -= s; });
-    });
-    
-    let res = "";
-    let ds = [], cs = [];
-    for(let p in bal) {
-        if(bal[p] < -0.1) ds.push({n:p, a:Math.abs(bal[p])});
-        else if(bal[p] > 0.1) cs.push({n:p, a:bal[p]});
-    }
-    let i=0, j=0;
-    while(i<ds.length && j<cs.length) {
-        let p = Math.min(ds[i].a, cs[j].a);
-        res += `<div><b>${ds[i].n}</b> ➔ <b>${cs[j].n}</b> : $${Math.round(p)}</div>`;
-        ds[i].a -= p; cs[j].a -= p;
-        if(ds[i].a <= 0.1) i++; if(cs[j].a <= 0.1) j++;
-    }
-    document.getElementById('settleResults').innerHTML = res || "帳目已平";
-}
-
-// --- 同步核心功能 ---
-
-// 匯出：將目前專案轉為 Base64 文字碼
-function exportToCode() {
-    const g = groups.find(x => x.id === curId);
-    const code = btoa(unescape(encodeURIComponent(JSON.stringify(g))));
-    
-    // 建立一個臨時輸入框來複製文字
-    const tempInput = document.createElement("textarea");
-    tempInput.value = code;
-    document.body.appendChild(tempInput);
-    tempInput.select();
-    document.execCommand("copy");
-    document.body.removeChild(tempInput);
-    
-    alert("同步碼已複製到剪貼簿！請直接貼給 Line 朋友。\n\n朋友收到後，點擊「匯入同步碼」並貼上即可。");
-}
-
-// 匯入：將文字碼轉回專案
-function importFromCode() {
-    const code = prompt("請貼上朋友傳給你的同步碼：");
-    if (!code) return;
-    try {
-        const importedGroup = JSON.parse(decodeURIComponent(escape(atob(code))));
-        // 檢查是否已存在，存在就更新，不存在就新增
-        const idx = groups.findIndex(g => g.id === importedGroup.id);
-        if (idx !== -1) {
-            if(confirm("偵測到相同的專案，要覆蓋舊資料嗎？")) {
-                groups[idx] = importedGroup;
-            } else { return; }
-        } else {
-            groups.push(importedGroup);
-        }
-        save();
-        renderList();
-        alert("匯入成功！");
-    } catch (e) {
-        alert("代碼無效，請確認是否複製完整。");
-    }
-}
-
-function save() { localStorage.setItem('split_simple_data', JSON.stringify(groups)); }
-
-window.onload = renderList;
-</script>
-
-</body>
-</html>
+          
