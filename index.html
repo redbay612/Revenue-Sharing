@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>分帳小幫手 - 穩定同步版</title>
+    <title>分帳小幫手 - 完整功能版</title>
     <style>
         :root { --p: #4f46e5; --s: #10b981; --d: #ef4444; --bg: #f3f4f6; }
         body { font-family: sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #1f2937; line-height: 1.5; }
         .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
         h2 { margin: 0 0 15px 0; font-size: 1.1rem; color: var(--p); display: flex; align-items: center; gap: 8px; }
         input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
-        .btn { border: none; padding: 12px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 8px; transition: 0.2s; font-size: 1rem; text-align: center; display: block; }
+        .btn { border: none; padding: 12px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 8px; transition: 0.2s; font-size: 1rem; text-align: center; display: block; text-decoration: none; }
         .btn-p { background: var(--p); }
         .btn-s { background: var(--s); }
         .btn-d { background: var(--d); }
@@ -24,11 +24,16 @@
         .settle-box { background: #ecfdf5; padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 4px solid var(--s); }
         .checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; padding: 10px 0; }
         .hidden { display: none; }
+        
+        /* 支出明細按鈕樣式 */
+        .action-btns { display: flex; gap: 5px; }
+        .btn-action { padding: 4px 10px; font-size: 0.8rem; border-radius: 4px; cursor: pointer; font-weight: bold; border: 1px solid transparent; }
+        .btn-edit-sm { background: white; color: var(--p); border-color: var(--p); }
+        .btn-del-sm { background: var(--d); color: white; border: none; }
     </style>
 </head>
 <body>
 
-<!-- 頁面 1: 專案清單 -->
 <div id="listPage">
     <div class="card">
         <h2>📂 我的分帳專案</h2>
@@ -39,7 +44,6 @@
     <div id="groupList"></div>
 </div>
 
-<!-- 頁面 2: 專案詳情 -->
 <div id="detailPage" class="hidden">
     <button class="btn btn-o" onclick="showList()" style="width:auto; margin-bottom:15px;">← 返回列表</button>
     
@@ -48,7 +52,6 @@
         <button class="btn btn-s" onclick="exportToCode()">🔗 產生同步碼 (複製傳給朋友)</button>
     </div>
 
-    <!-- 成員管理 -->
     <div class="card">
         <h2>👥 成員管理 (點擊名字可修改)</h2>
         <div class="member-list" id="memberTags"></div>
@@ -58,24 +61,20 @@
         </div>
     </div>
 
-    <!-- 支出 -->
     <div class="card">
         <h2>💰 新增支出</h2>
         <input type="hidden" id="editIdx" value="-1">
-        <input type="text" id="expDesc" placeholder="項目內容 (如：晚餐)">
+        <input type="text" id="expDesc" placeholder="項目內容">
         <input type="number" id="expAmt" placeholder="金額">
-        
         <label style="font-size:0.85rem; color:#666;">誰付的錢：</label>
         <select id="expPayer"></select>
-        
         <label style="font-size:0.85rem; color:#666;">誰要平分：</label>
         <div id="splitCheckboxes" class="checkbox-group"></div>
-        
         <button class="btn btn-p" id="saveExpBtn" onclick="saveExp()">儲存紀錄</button>
     </div>
 
     <div class="card">
-        <h2>📊 結算報告 (誰該給誰多少錢)</h2>
+        <h2>📊 結算報告</h2>
         <div id="settleResults" class="settle-box"></div>
     </div>
 
@@ -91,27 +90,22 @@
 </div>
 
 <script>
-// 初始化資料
 let groups = [];
 try {
     const savedData = localStorage.getItem('split_v3_data');
     groups = savedData ? JSON.parse(savedData) : [];
-} catch (e) {
-    groups = [];
-}
+} catch (e) { groups = []; }
 let curId = null;
 
-// --- 列表功能 ---
+function save() { localStorage.setItem('split_v3_data', JSON.stringify(groups)); }
+
 function addGroup() {
     const nameInput = document.getElementById('newGroupName');
     const name = nameInput.value.trim();
-    if (!name) { alert("請輸入專案名稱"); return; }
-    
-    const newGroup = { id: Date.now(), name: name, members: [], exps: [] };
+    if (!name) return;
+    const newGroup = { id: Date.now(), name, members: [], exps: [] };
     groups.push(newGroup);
-    save();
-    renderList();
-    nameInput.value = "";
+    save(); renderList(); nameInput.value = "";
 }
 
 function renderList() {
@@ -124,10 +118,7 @@ function renderList() {
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <strong>${g.name}</strong>
-                <button class="btn-d" style="border:none; color:white; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="deleteGroup(${g.id}, event)">刪除</button>
-            </div>
-            <div style="font-size:0.85rem; color:#6b7280; margin-top:8px;">
-                成員: ${g.members.length} | 紀錄: ${g.exps.length}
+                <button class="btn-d" style="border:none; color:white; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="deleteGroup(${g.id}, event)">刪除專案</button>
             </div>`;
         list.appendChild(div);
     });
@@ -135,90 +126,58 @@ function renderList() {
 
 function deleteGroup(id, e) {
     e.stopPropagation();
-    if(confirm("確定刪除此專案嗎？")) {
+    if(confirm("確定刪除整個專案嗎？")) {
         groups = groups.filter(g => g.id !== id);
-        save();
-        renderList();
+        save(); renderList();
     }
 }
 
-// --- 成員功能 ---
 function addMember() {
     const g = groups.find(x => x.id === curId);
     const nameInput = document.getElementById('newMemberName');
     const name = nameInput.value.trim();
-    if (!name) return;
-    if (g.members.includes(name)) { alert("名字重複了"); return; }
-    
+    if (!name || g.members.includes(name)) return;
     g.members.push(name);
     nameInput.value = "";
-    save();
-    refreshMemberUI();
+    save(); refreshMemberUI();
 }
 
 function editMemberName(oldName) {
     const newName = prompt(`將「${oldName}」修改為：`, oldName);
     if (!newName || newName.trim() === oldName) return;
-    
     const g = groups.find(x => x.id === curId);
-    const trimmedNewName = newName.trim();
-    if (g.members.includes(trimmedNewName)) { alert("此名字已存在"); return; }
-
-    g.members = g.members.map(m => m === oldName ? trimmedNewName : m);
+    const trimmed = newName.trim();
+    g.members = g.members.map(m => m === oldName ? trimmed : m);
     g.exps.forEach(ex => {
-        if (ex.payer === oldName) ex.payer = trimmedNewName;
-        ex.splitters = ex.splitters.map(s => s === oldName ? trimmedNewName : s);
+        if (ex.payer === oldName) ex.payer = trimmed;
+        ex.splitters = ex.splitters.map(s => s === oldName ? trimmed : s);
     });
-
-    save();
-    refreshMemberUI();
-    renderExps();
+    save(); refreshMemberUI(); renderExps();
 }
 
 function refreshMemberUI() {
     const g = groups.find(x => x.id === curId);
-    // 更新標籤
-    const tagDiv = document.getElementById('memberTags');
-    tagDiv.innerHTML = g.members.map(m => `
-        <div class="member-tag" onclick="editMemberName('${m}')">${m} ✎</div>
-    `).join('');
-
-    // 更新選單
-    const payerSelect = document.getElementById('expPayer');
-    payerSelect.innerHTML = g.members.map(m => `<option value="${m}">${m}</option>`).join('');
-
-    // 更新勾選框
-    const checkDiv = document.getElementById('splitCheckboxes');
-    checkDiv.innerHTML = g.members.map(m => `
-        <label><input type="checkbox" name="sc" value="${m}" checked> ${m}</label>
-    `).join('');
+    document.getElementById('memberTags').innerHTML = g.members.map(m => `<div class="member-tag" onclick="editMemberName('${m}')">${m} ✎</div>`).join('');
+    document.getElementById('expPayer').innerHTML = g.members.map(m => `<option value="${m}">${m}</option>`).join('');
+    document.getElementById('splitCheckboxes').innerHTML = g.members.map(m => `<label><input type="checkbox" name="sc" value="${m}" checked> ${m}</label>`).join('');
 }
 
-// --- 支出功能 ---
 function saveExp() {
     const g = groups.find(x => x.id === curId);
-    if (g.members.length === 0) { alert("請先在上方『成員管理』新增成員！"); return; }
-
     const desc = document.getElementById('expDesc').value.trim();
     const amt = parseFloat(document.getElementById('expAmt').value);
     const payer = document.getElementById('expPayer').value;
     const splitters = Array.from(document.querySelectorAll('input[name="sc"]:checked')).map(i => i.value);
     const editIdx = parseInt(document.getElementById('editIdx').value);
-
-    if(!desc || isNaN(amt) || splitters.length === 0) { alert("請填寫項目、金額並勾選分攤成員"); return; }
-
+    if(!desc || isNaN(amt) || splitters.length === 0) return alert("請填寫完整資訊");
     const data = { desc, amt, payer, splitters };
     if(editIdx === -1) g.exps.push(data);
     else g.exps[editIdx] = data;
-
-    // 重置表單
     document.getElementById('editIdx').value = "-1";
     document.getElementById('expDesc').value = "";
     document.getElementById('expAmt').value = "";
     document.getElementById('saveExpBtn').innerText = "儲存紀錄";
-    
-    save();
-    renderExps();
+    save(); renderExps();
 }
 
 function renderExps() {
@@ -231,7 +190,10 @@ function renderExps() {
             <td style="font-weight:bold;">$${ex.amt}</td>
             <td>${ex.payer}</td>
             <td>
-                <button class="btn-o" style="padding:2px 8px; width:auto; font-size:0.8rem;" onclick="editExp(${i})">改</button>
+                <div class="action-btns">
+                    <button class="btn-action btn-edit-sm" onclick="editExp(${i})">改</button>
+                    <button class="btn-action btn-del-sm" onclick="deleteExp(${i})">刪</button>
+                </div>
             </td>
         </tr>`;
     });
@@ -246,9 +208,17 @@ function editExp(i) {
     document.getElementById('expPayer').value = ex.payer;
     document.getElementById('editIdx').value = i;
     document.getElementById('saveExpBtn').innerText = "更新紀錄";
-    
     const cbs = document.querySelectorAll('input[name="sc"]');
     cbs.forEach(cb => cb.checked = ex.splitters.includes(cb.value));
+}
+
+function deleteExp(i) {
+    if(confirm("確定要刪除這筆支出紀錄嗎？")) {
+        const g = groups.find(x => x.id === curId);
+        g.exps.splice(i, 1);
+        save();
+        renderExps();
+    }
 }
 
 function calculate() {
@@ -260,75 +230,50 @@ function calculate() {
         if(bal[ex.payer] !== undefined) bal[ex.payer] += ex.amt;
         ex.splitters.forEach(p => { if(bal[p] !== undefined) bal[p] -= share; });
     });
-    
     let res = "";
-    let debtors = [], creditors = [];
+    let ds = [], cs = [];
     for(let p in bal) {
-        if(bal[p] < -0.1) debtors.push({n:p, a:Math.abs(bal[p])});
-        else if(bal[p] > 0.1) creditors.push({n:p, a:bal[p]});
+        if(bal[p] < -0.1) ds.push({n:p, a:Math.abs(bal[p])});
+        else if(bal[p] > 0.1) cs.push({n:p, a:bal[p]});
     }
     let i=0, j=0;
-    while(i < debtors.length && j < creditors.length) {
-        let p = Math.min(debtors[i].a, creditors[j].a);
-        res += `<div><b>${debtors[i].n}</b> ➔ 支付 <b>${creditors[j].n}</b> : $${Math.round(p)}</div>`;
-        debtors[i].a -= p; creditors[j].a -= p;
-        if(debtors[i].a <= 0.1) i++; 
-        if(creditors[j].a <= 0.1) j++;
+    while(i < ds.length && j < cs.length) {
+        let p = Math.min(ds[i].a, cs[j].a);
+        res += `<div><b>${ds[i].n}</b> ➔ 支付 <b>${cs[j].n}</b> : $${Math.round(p)}</div>`;
+        ds[i].a -= p; cs[j].a -= p;
+        if(ds[i].a <= 0.1) i++; if(cs[j].a <= 0.1) j++;
     }
     document.getElementById('settleResults').innerHTML = res || "帳目已平衡";
 }
 
-// --- 同步碼功能 ---
 function exportToCode() {
     const g = groups.find(x => x.id === curId);
-    try {
-        const jsonStr = JSON.stringify(g);
-        // 使用支援 UTF-8 的 Base64 編碼
-        const code = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
-        
-        const temp = document.createElement("textarea");
-        temp.value = code; document.body.appendChild(temp); temp.select();
-        document.execCommand("copy"); document.body.removeChild(temp);
-        alert("同步碼已複製到剪貼簿！請直接傳給 Line 朋友。");
-    } catch (e) {
-        alert("產生失敗，請確認資料是否正常。");
-    }
+    const code = btoa(encodeURIComponent(JSON.stringify(g)).replace(/%([0-9A-F]{2})/g, (match, p1) => String.fromCharCode('0x' + p1)));
+    const temp = document.createElement("textarea");
+    temp.value = code; document.body.appendChild(temp); temp.select();
+    document.execCommand("copy"); document.body.removeChild(temp);
+    alert("同步碼已複製！");
 }
 
 function importFromCode() {
-    const code = prompt("請貼上朋友傳給你的同步碼：");
+    const code = prompt("請貼上同步碼：");
     if (!code) return;
     try {
-        // 解碼支援 UTF-8
         const jsonStr = decodeURIComponent(atob(code).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
         const imported = JSON.parse(jsonStr);
-        
-        if (!imported.id || !imported.name) throw new Error();
-
         const idx = groups.findIndex(g => g.id === imported.id);
-        if (idx !== -1) {
-            if(!confirm("偵測到同名專案，要覆蓋舊資料嗎？")) return;
-            groups[idx] = imported;
-        } else {
-            groups.push(imported);
-        }
-        save();
-        renderList();
-        alert("匯入成功！");
-    } catch (e) {
-        alert("代碼無效，請確保複製了完整的同步碼。");
-    }
+        if (idx !== -1) { if(!confirm("覆蓋舊資料？")) return; groups[idx] = imported; }
+        else { groups.push(imported); }
+        save(); renderList(); alert("匯入成功！");
+    } catch (e) { alert("代碼無效。"); }
 }
 
-// --- 頁面導覽 ---
 function showDetail(id) {
-    curId = id;
-    const g = groups.find(x => x.id === id);
+    curId = id; const g = groups.find(x => x.id === id);
     document.getElementById('listPage').classList.add('hidden');
     document.getElementById('detailPage').classList.remove('hidden');
     document.getElementById('currentTitle').innerText = "📍 " + g.name;
-    refreshMemberUI();
-    renderExps();
+    refreshMemberUI(); renderExps();
 }
 
 function showList() {
@@ -337,13 +282,7 @@ function showList() {
     renderList();
 }
 
-function save() {
-    localStorage.setItem('split_v3_data', JSON.stringify(groups));
-}
-
-// 啟動
 window.onload = renderList;
 </script>
-
 </body>
 </html>
